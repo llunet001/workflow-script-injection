@@ -44,16 +44,45 @@ fi
 
 # Install dependencies
 echo "📦 Installing Node.js dependencies..."
-# Clean existing modules to avoid wrong-arch binaries
+# Clean caches and modules to avoid wrong-arch binaries
+npm cache clean --force || true
 rm -rf node_modules
+export npm_config_build_from_source=1
+export npm_config_unsafe_perm=true
 # Rebuild sqlite3 from source to match the instance architecture
-npm install --production --build-from-source sqlite3 || npm install --production
+npm install --production --build-from-source sqlite3 --unsafe-perm || npm install --production --unsafe-perm
+npm rebuild sqlite3 --build-from-source --unsafe-perm || true
 
 # Install PM2 for process management
 if ! command -v pm2 &> /dev/null; then
     echo "📦 Installing PM2..."
     sudo npm install -g pm2
 fi
+
+# Install and configure Nginx as reverse proxy to expose on port 80
+if ! command -v nginx &> /dev/null; then
+    echo "📦 Installing Nginx..."
+    sudo yum install -y nginx 2>/dev/null || sudo apt-get install -y nginx
+fi
+
+echo "🔧 Configuring Nginx reverse proxy (80 -> 3000)..."
+NGINX_CONF="/etc/nginx/conf.d/security-demo.conf"
+sudo bash -c "cat > $NGINX_CONF" <<'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
 
 # Stop existing app if running
 pm2 stop security-demo || true

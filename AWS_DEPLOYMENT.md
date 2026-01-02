@@ -97,6 +97,8 @@ chmod +x deploy-ec2.sh
 # Run the deployment
 ./deploy-ec2.sh
 
+This now also installs Nginx and proxies port 80 → 3000, so you can use the public DNS without specifying a port (ensure your security group allows inbound TCP 80).
+
 If you hit a `sqlite3 ... invalid ELF header` error, rerun the script (it now rebuilds sqlite3 from source). For existing instances, you can also run:
 
 ```bash
