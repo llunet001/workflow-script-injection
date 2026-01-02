@@ -23,6 +23,7 @@ jobs:
       APP_NAME: security-demo
       APP_DIR: /home/ec2-user/workflow-script-injection
       ARCHIVE_NAME: release.tar.gz
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
