@@ -29,6 +29,12 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch || github.ref }}
 
+      - name: Log deployment info
+        run: |
+          echo "Deploying from branch: ${{ github.event.inputs.branch }}"
+          branch="${{ github.event.inputs.branch }}"
+          echo "Branch name: $branch"
+
       - name: Install dependencies
         run: npm install
 
