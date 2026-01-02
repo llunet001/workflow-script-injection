@@ -87,7 +87,7 @@ ssh -i your-key.pem ec2-user@<YOUR-EC2-PUBLIC-IP>
 
 Once connected to your EC2 instance, run:
 
-```bash
+````bash
 # Download the deployment script
 curl -O https://raw.githubusercontent.com/llunet001/workflow-script-injection/main/deploy-ec2.sh
 
@@ -96,7 +96,20 @@ chmod +x deploy-ec2.sh
 
 # Run the deployment
 ./deploy-ec2.sh
-```
+
+If you hit a `sqlite3 ... invalid ELF header` error, rerun the script (it now rebuilds sqlite3 from source). For existing instances, you can also run:
+
+```bash
+cd ~/workflow-script-injection
+rm -rf node_modules
+sudo yum groupinstall -y "Development Tools" || true
+sudo yum install -y sqlite sqlite-devel python3 make gcc || true
+npm install --production --build-from-source sqlite3 || npm install --production
+pm2 restart security-demo
+pm2 status
+````
+
+````
 
 Or manually:
 
@@ -123,7 +136,7 @@ pm2 save
 
 # Set PM2 to start on boot
 pm2 startup
-```
+````
 
 ### Step 4: Access Your Application
 

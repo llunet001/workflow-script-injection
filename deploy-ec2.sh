@@ -11,6 +11,11 @@ echo "🚀 Starting deployment of Security Demo App..."
 echo "📦 Updating system packages..."
 sudo yum update -y || sudo apt-get update -y
 
+# Install build tools and sqlite headers (needed to compile sqlite3)
+echo "🛠️  Installing build tools and SQLite headers..."
+sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
+sudo yum install -y sqlite sqlite-devel python3 make gcc 2>/dev/null || sudo apt-get install -y sqlite3 libsqlite3-dev python3 build-essential || true
+
 # Install Node.js if not present
 if ! command -v node &> /dev/null; then
     echo "📦 Installing Node.js..."
@@ -39,7 +44,10 @@ fi
 
 # Install dependencies
 echo "📦 Installing Node.js dependencies..."
-npm install
+# Clean existing modules to avoid wrong-arch binaries
+rm -rf node_modules
+# Rebuild sqlite3 from source to match the instance architecture
+npm install --production --build-from-source sqlite3 || npm install --production
 
 # Install PM2 for process management
 if ! command -v pm2 &> /dev/null; then
@@ -67,7 +75,14 @@ echo "📊 Application Status:"
 pm2 status
 
 echo ""
-echo "🌐 Access your app at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000"
+# Fetch public IP (IMDSv2 with fallback)
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)
+if [ -n "$TOKEN" ]; then
+    PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+else
+    PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+fi
+echo "🌐 Access your app at: http://$PUBLIC_IP:3000"
 echo ""
 echo "📝 Useful commands:"
 echo "  pm2 logs security-demo    - View logs"
