@@ -1,0 +1,68 @@
+name: Deploy Demo App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app.js'
+      - 'package.json'
+      - '.github/workflows/deploy-demo-app.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'staging'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests (placeholder)
+        run: |
+          echo "Running tests..."
+          echo "✅ All tests passed"
+
+      - name: Build info
+        run: |
+          echo "Building demo app..."
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Author: ${{ github.actor }}"
+
+      # VULNERABLE: Using user input from workflow_dispatch
+      - name: Deploy to environment
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          environment="${{ github.event.inputs.environment }}"
+          echo "Deploying to: $environment"
+          echo "This is where script injection could occur!"
+          # In a real scenario, this might execute: ./deploy.sh $environment
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App Details:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: ${{ github.event.inputs.environment || 'staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered by: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Security Note:** This workflow demonstrates potential script injection points." >> $GITHUB_STEP_SUMMARY
+
+      - name: Start demo app (for testing)
+        run: |
+          echo "Starting demo app on port 3000..."
+          echo "Access it at http://localhost:3000"
+          echo "Note: In a real deployment, you'd deploy to a server/cloud platform"

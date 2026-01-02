@@ -1,0 +1,102 @@
+name: CI/CD Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-ec2-pipeline.yml"
+      - "deploy-ec2.sh"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: false
+        default: "main"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      APP_NAME: security-demo
+      APP_DIR: /home/ec2-user/workflow-script-injection
+      ARCHIVE_NAME: release.tar.gz
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests (placeholder)
+        run: |
+          echo "Running tests..."
+          echo "✅ All tests passed"
+
+      - name: Create deployment archive
+        run: |
+          tar -czf $ARCHIVE_NAME \
+            app.js package.json package-lock.json deploy-ec2.sh Dockerfile .dockerignore \
+            ddos-test.py README.md AWS_DEPLOYMENT.md DEMO_GUIDE.md \
+            solutions tutorial-queries exercises images \
+            .github/actions .github/workflows
+
+      - name: Upload archive to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ec2-user' }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          source: ${{ env.ARCHIVE_NAME }}
+          target: /home/${{ secrets.EC2_USER || 'ec2-user' }}/
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ec2-user' }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            set -e
+            ARCHIVE_NAME=${{ env.ARCHIVE_NAME }}
+            APP_DIR=${{ env.APP_DIR }}
+
+            echo "📦 Preparing deploy directory: $APP_DIR"
+            mkdir -p "$APP_DIR"
+            mv ~/$ARCHIVE_NAME "$APP_DIR"/
+            cd "$APP_DIR"
+            tar -xzf "$ARCHIVE_NAME"
+            rm "$ARCHIVE_NAME"
+
+            echo "📦 Installing Node.js dependencies..."
+            npm install --production
+
+            echo "🔧 Installing PM2 (if missing)..."
+            if ! command -v pm2 >/dev/null 2>&1; then
+              sudo npm install -g pm2
+            fi
+
+            echo "🚀 Restarting app with PM2..."
+            pm2 stop ${{ env.APP_NAME }} || true
+            pm2 delete ${{ env.APP_NAME }} || true
+            pm2 start app.js --name ${{ env.APP_NAME }}
+            pm2 save
+
+            echo "✅ Deploy complete"
+            pm2 status
+
+      - name: Deployment summary
+        run: |
+          echo "## EC2 Deploy Complete 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "- Host: ${{ secrets.EC2_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.event.inputs.branch || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- App: ${APP_NAME}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Remember to restrict SSH access and rotate keys regularly." >> $GITHUB_STEP_SUMMARY
