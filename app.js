@@ -54,7 +54,7 @@ app.get("/", (req, res) => {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Script Injection Demo</title>
+      <title>Script Injection Demosssss</title>
       <style>
         body {
           font-family: Arial, sans-serif;
