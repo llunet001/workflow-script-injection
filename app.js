@@ -138,7 +138,7 @@ app.get("/", (req, res) => {
 
         <div class="auth-card">
           <h3>Internal Auth (safe package)</h3>
-          <p>Calling <code>@demo/internal-auth</code> to show intended behavior.</p>
+          <p>Calling <code>@cybersecurite.enseirb/internal-auth</code> to show intended behavior.</p>
           <div class="result">
             <pre id="auth-result">Loading...</pre>
           </div>
@@ -402,7 +402,7 @@ app.get("/health", (req, res) => {
 app.get("/auth-demo", (req, res) => {
   const result = authenticate("demo-user");
   res.json({
-    source: "@demo/internal-auth",
+    source: "@cybersecurite.enseirb/internal-auth",
     data: result,
   });
 });
