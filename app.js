@@ -1,7 +1,7 @@
 const express = require("express");
 const { exec } = require("child_process");
 const sqlite3 = require("sqlite3").verbose();
-const { authenticate } = require("@demo/internal-auth");
+const { authenticate } = require("@cybersecurite.enseirb/internal-auth");
 const app = express();
 const port = process.env.PORT || 3000;
 
