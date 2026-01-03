@@ -1,6 +1,7 @@
 const express = require("express");
 const { exec } = require("child_process");
 const sqlite3 = require("sqlite3").verbose();
+const { authenticate } = require("@demo/internal-auth");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -118,6 +119,13 @@ app.get("/", (req, res) => {
           border-radius: 4px;
           margin-top: 20px;
         }
+        .auth-card {
+          margin-top: 20px;
+          padding: 15px;
+          background: #e8f5ff;
+          border-radius: 4px;
+          border-left: 4px solid #007bff;
+        }
       </style>
     </head>
     <body>
@@ -126,6 +134,14 @@ app.get("/", (req, res) => {
         
         <div class="warning">
           ⚠️ <strong>Warning:</strong> This application intentionally contains security vulnerabilities for educational purposes. Never deploy this in production!
+        </div>
+
+        <div class="auth-card">
+          <h3>Internal Auth (safe package)</h3>
+          <p>Calling <code>@demo/internal-auth</code> to show intended behavior.</p>
+          <div class="result">
+            <pre id="auth-result">Loading...</pre>
+          </div>
         </div>
 
         <p><strong>Request Count:</strong> ${requestCount} requests in the last minute</p>
@@ -179,6 +195,15 @@ app.get("/", (req, res) => {
           <li>Expressions like <code>\${{ github.event.issue.title }}</code> are interpolated into shell commands</li>
         </ul>
       </div>
+      <script>
+        fetch('/auth-demo').then(r => r.json()).then(data => {
+          const el = document.getElementById('auth-result');
+          el.textContent = JSON.stringify(data, null, 2);
+        }).catch(() => {
+          const el = document.getElementById('auth-result');
+          el.textContent = 'Failed to load auth data';
+        });
+      </script>
     </body>
     </html>
   `);
@@ -370,6 +395,15 @@ app.get("/health", (req, res) => {
     status: "ok",
     requests: requestCount,
     timestamp: new Date().toISOString(),
+  });
+});
+
+// Safe endpoint demonstrating internal auth usage
+app.get("/auth-demo", (req, res) => {
+  const result = authenticate("demo-user");
+  res.json({
+    source: "@demo/internal-auth",
+    data: result,
   });
 });
 

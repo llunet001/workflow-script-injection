@@ -1,0 +1,7 @@
+{
+  "name": "@cybersecurite.enseirb/internal-auth",
+  "version": "1.0.0",
+  "description": "Safe internal auth helper for demo",
+  "main": "index.js",
+  "license": "MIT"
+}
