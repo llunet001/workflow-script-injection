@@ -28,6 +28,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Remove lockfile (demo newest deps)
+        run: rm -f package-lock.json
+
       - name: Log deployment info
         run: |
           echo "Deploying from branch: ${{ github.event.inputs.branch }}"
