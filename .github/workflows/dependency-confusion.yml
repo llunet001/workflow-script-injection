@@ -1,0 +1,96 @@
+name: Dependency Confusion Attack Demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vulnerable-install:
+    runs-on: ubuntu-latest
+    env:
+      # These secrets will be stolen during npm install!
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      NPM_TOKEN: "npm_fake_token_for_demo"
+      DATABASE_URL: "postgresql://user:pass@db.example.com/prod"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Scenario explanation
+        run: |
+          echo "🎯 DEPENDENCY CONFUSION ATTACK SCENARIO"
+          echo "========================================"
+          echo ""
+          echo "Your company uses an internal package: @mycompany/internal-auth"
+          echo "It's hosted on your private registry: npm.pkg.github.com"
+          echo ""
+          echo "An attacker discovers this package name and:"
+          echo "1. Creates a malicious version with the SAME NAME"
+          echo "2. Publishes it to public npm with version 999.999.999"
+          echo "3. Waits for your CI/CD to run 'npm install'"
+          echo ""
+          echo "What happens next? Let's see..."
+          echo ""
+
+      - name: Install malicious package (simulated)
+        run: |
+          echo "📦 Running: npm install"
+          echo "   Looking for @mycompany/internal-auth..."
+          echo "   ❌ Private registry: v1.0.0 found"
+          echo "   ✅ Public npm: v999.999.999 found (HIGHER VERSION!)"
+          echo "   Installing from public npm..."
+          echo ""
+
+          cd malicious-package
+          npm install
+
+          echo ""
+          echo "⚠️ The postinstall script just executed!"
+          echo "Check the logs above to see what was exfiltrated."
+
+      - name: Exploitation summary
+        run: |
+          echo ""
+          echo "🚨 ATTACK SUCCESSFUL!"
+          echo "===================="
+          echo "The malicious postinstall script:"
+          echo "✓ Ran automatically during npm install"
+          echo "✓ Had access to ALL environment variables"
+          echo "✓ Exfiltrated secrets to attacker's webhook"
+          echo "✓ CI/CD pipeline continued normally (stealth)"
+          echo ""
+          echo "Stolen data includes:"
+          echo "- AWS credentials"
+          echo "- NPM tokens"
+          echo "- Database URLs"
+          echo "- GitHub tokens"
+          echo "- Any other secrets in environment"
+
+      - name: Mitigation strategies
+        run: |
+          echo ""
+          echo "✅ HOW TO PREVENT THIS"
+          echo "======================"
+          echo ""
+          echo "1. Scope registries in .npmrc:"
+          echo "   @mycompany:registry=https://npm.pkg.github.com"
+          echo ""
+          echo "2. Use --ignore-scripts during install:"
+          echo "   npm ci --ignore-scripts"
+          echo ""
+          echo "3. Lock dependencies with package-lock.json:"
+          echo "   npm ci --frozen-lockfile"
+          echo ""
+          echo "4. Monitor for unexpected packages:"
+          echo "   npm audit"
+          echo "   Check package-lock.json changes in PRs"
+          echo ""
+          echo "5. Use private registries with authentication"
+          echo ""
+          echo "6. Restrict network access in CI/CD"
