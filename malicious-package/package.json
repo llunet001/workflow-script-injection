@@ -1,6 +1,6 @@
 {
   "name": "@cybersecurite.enseirb/internal-auth",
-  "version": "1.999.998",
+  "version": "1.999.997",
   "description": "MALICIOUS PACKAGE - Demonstrates dependency confusion attack",
   "main": "index.js",
   "scripts": {
