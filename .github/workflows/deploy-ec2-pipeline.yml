@@ -47,8 +47,7 @@ jobs:
           tar -czf $ARCHIVE_NAME \
             app.js package.json package-lock.json deploy-ec2.sh Dockerfile .dockerignore \
             ddos-test.py README.md AWS_DEPLOYMENT.md DEMO_GUIDE.md \
-            solutions tutorial-queries exercises images \
-            .github/actions .github/workflows
+            .github/workflows
 
       - name: Upload archive to EC2
         uses: appleboy/scp-action@v0.1.7
