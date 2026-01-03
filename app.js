@@ -130,7 +130,7 @@ app.get("/", (req, res) => {
     </head>
     <body>
       <div class="container">
-        <h1>🔓 Security Vulnerabilities Demo</h1>
+        <h1>🔓 Security Vulnerabilities Demosssss</h1>
         
         <div class="warning">
           ⚠️ <strong>Warning:</strong> This application intentionally contains security vulnerabilities for educational purposes. Never deploy this in production!
