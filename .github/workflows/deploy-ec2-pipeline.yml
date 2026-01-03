@@ -82,7 +82,7 @@ jobs:
             rm "$ARCHIVE_NAME"
 
             echo "📦 Installing Node.js dependencies..."
-            npm install --production
+            npm install
 
             echo "🔧 Installing PM2 (if missing)..."
             if ! command -v pm2 >/dev/null 2>&1; then
