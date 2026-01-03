@@ -18,6 +18,6 @@
   "dependencies": {
     "express": "^4.18.2",
     "sqlite3": "^5.1.6",
-    "@cybersecurite.enseirb/internal-auth": "1.0.0"
+    "@cybersecurite.enseirb/internal-auth": "^1.0.0"
   }
 }
